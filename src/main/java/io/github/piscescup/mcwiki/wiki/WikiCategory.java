@@ -1,4 +1,4 @@
-package io.github.piscescup.mcwiki.constant;
+package io.github.piscescup.mcwiki.wiki;
 
 
 import net.minecraft.world.item.ItemStack;
