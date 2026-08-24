@@ -1,11 +1,11 @@
-package io.github.piscescup;
+package io.github.piscescup.mcwiki;
 
-import io.github.piscescup.command.WikiCommands;
+import io.github.piscescup.mcwiki.command.WikiCommands;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 
 
-import static io.github.piscescup.References.MOD_LOGGER;
+import static io.github.piscescup.mcwiki.References.MOD_LOGGER;
 
 
 public class MinecraftWiki implements ModInitializer {

@@ -1,4 +1,4 @@
-package io.github.piscescup.command;
+package io.github.piscescup.mcwiki.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;

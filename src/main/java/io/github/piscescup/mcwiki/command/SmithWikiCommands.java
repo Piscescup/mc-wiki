@@ -1,7 +1,7 @@
-package io.github.piscescup.command;
+package io.github.piscescup.mcwiki.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import io.github.piscescup.constant.WikiCategory;
+import io.github.piscescup.mcwiki.constant.WikiCategory;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 

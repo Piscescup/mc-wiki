@@ -1,4 +1,4 @@
-package io.github.piscescup;
+package io.github.piscescup.mcwiki;
 
 import io.github.piscescup.util.validation.NullCheck;
 import net.minecraft.resources.Identifier;

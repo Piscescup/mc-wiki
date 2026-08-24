@@ -1,4 +1,4 @@
-package io.github.piscescup.mixin;
+package io.github.piscescup.mcwiki.mixin;
 
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;

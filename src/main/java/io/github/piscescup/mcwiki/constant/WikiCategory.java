@@ -1,9 +1,8 @@
-package io.github.piscescup.constant;
+package io.github.piscescup.mcwiki.constant;
 
 
 import net.minecraft.world.item.ItemStack;
 
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 

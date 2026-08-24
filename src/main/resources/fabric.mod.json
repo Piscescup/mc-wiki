@@ -16,10 +16,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"io.github.piscescup.MinecraftWiki"
+          "io.github.piscescup.mcwiki.MinecraftWiki"
 		],
 		"fabric-datagen": [
-			"io.github.piscescup.MinecraftWikiDataGenerator"
+          "io.github.piscescup.mcwiki.MinecraftWikiDataGenerator"
 		]
 	},
 	"mixins": [
