@@ -1,8 +1,7 @@
-package io.github.piscescup.mcwiki.client.gui;
+package io.github.piscescup.mcwiki;
 
-import io.github.piscescup.mcwiki.client.WikiTexts;
-import io.github.piscescup.mcwiki.client.gui.format.WikiTable;
-import io.github.piscescup.mcwiki.client.gui.format.WikiTableCardFormatter;
+import io.github.piscescup.mcwiki.format.WikiTable;
+import io.github.piscescup.mcwiki.format.WikiTableCardFormatter;
 import io.github.piscescup.mcwiki.wiki.WikiCategory;
 import io.github.piscescup.mcwiki.wiki.model.WikiPageSummary;
 import net.minecraft.ChatFormatting;

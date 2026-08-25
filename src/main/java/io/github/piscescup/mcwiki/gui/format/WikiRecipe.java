@@ -1,4 +1,4 @@
-package io.github.piscescup.mcwiki.client.gui.format;
+package io.github.piscescup.mcwiki.format;
 
 import java.util.List;
 

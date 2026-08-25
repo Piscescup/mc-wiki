@@ -1,4 +1,4 @@
-package io.github.piscescup.mcwiki.client.gui.format;
+package io.github.piscescup.mcwiki.format;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

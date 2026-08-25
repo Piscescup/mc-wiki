@@ -1,4 +1,4 @@
-package io.github.piscescup.mcwiki.client;
+package io.github.piscescup.mcwiki;
 
 import io.github.piscescup.mcwiki.wiki.WikiCategory;
 

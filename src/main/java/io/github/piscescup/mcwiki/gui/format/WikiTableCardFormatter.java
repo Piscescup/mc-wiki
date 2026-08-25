@@ -1,6 +1,6 @@
-package io.github.piscescup.mcwiki.client.gui.format;
+package io.github.piscescup.mcwiki.format;
 
-import io.github.piscescup.mcwiki.client.WikiTexts;
+import io.github.piscescup.mcwiki.WikiTexts;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

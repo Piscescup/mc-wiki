@@ -1,11 +1,11 @@
 package io.github.piscescup.mcwiki.command;
 
 import io.github.piscescup.mcwiki.api.mediawiki.MediaWikiClient;
-import io.github.piscescup.mcwiki.client.gui.WikiResultScreen;
-import io.github.piscescup.mcwiki.client.gui.format.WikiHtmlTableParser;
-import io.github.piscescup.mcwiki.client.gui.format.WikiArticleHtmlFormatter;
-import io.github.piscescup.mcwiki.client.gui.format.WikiTable;
-import io.github.piscescup.mcwiki.client.WikiTexts;
+import io.github.piscescup.mcwiki.WikiResultScreen;
+import io.github.piscescup.mcwiki.format.WikiHtmlTableParser;
+import io.github.piscescup.mcwiki.format.WikiArticleHtmlFormatter;
+import io.github.piscescup.mcwiki.format.WikiTable;
+import io.github.piscescup.mcwiki.WikiTexts;
 import io.github.piscescup.mcwiki.config.MCWikiSettings;
 import io.github.piscescup.mcwiki.wiki.WikiCategory;
 import io.github.piscescup.mcwiki.wiki.model.WikiRequest;

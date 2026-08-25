@@ -1,4 +1,4 @@
-package io.github.piscescup.mcwiki.client.gui.format;
+package io.github.piscescup.mcwiki.format;
 
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.html.HTML;
