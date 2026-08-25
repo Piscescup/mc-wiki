@@ -1,8 +1,6 @@
 package io.github.piscescup.mcwiki;
 
-import io.github.piscescup.mcwiki.command.WikiCommands;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 
 
 import static io.github.piscescup.mcwiki.References.MOD_LOGGER;
@@ -16,10 +14,7 @@ public class MinecraftWiki implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
-		CommandRegistrationCallback.EVENT.register(WikiCommands::registerMCWikiCommands);
-
-
-		MOD_LOGGER.info("Hello Fabric world!");
+		MOD_LOGGER.info("Minecraft Wiki initialized.");
 	}
 
 }

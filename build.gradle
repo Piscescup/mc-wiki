@@ -25,6 +25,8 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	implementation "io.github.piscescup:commons-lib:${project.commons_lib_version}"
+	implementation "org.jsoup:jsoup:${project.jsoup_version}"
+	include "org.jsoup:jsoup:${project.jsoup_version}"
 }
 
 processResources {
@@ -53,6 +55,8 @@ java {
 jar {
 	def projectName = project.name
 	inputs.property "projectName", projectName
+
+	archiveFileName = "${projectName}-${project.mod_version}-${project.mod_loader}-mc-${project.minecraft_version}.jar"
 
 	from("LICENSE") {
 		rename { "${it}_$projectName"}

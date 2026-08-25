@@ -2,9 +2,10 @@ package io.github.piscescup.mcwiki.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.commands.CommandBuildContext;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
+
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 /**
  *
@@ -14,9 +15,10 @@ import net.minecraft.commands.Commands;
 public final class WikiCommands {
     private WikiCommands() {}
 
-    public static final LiteralArgumentBuilder<CommandSourceStack> ROOT_COMMAND = Commands.literal("mc-wiki");
+    public static final LiteralArgumentBuilder<FabricClientCommandSource> ROOT_COMMAND =
+        literal("mc-wiki");
 
-    public static final LiteralArgumentBuilder<CommandSourceStack> COMMANDS =
+    public static final LiteralArgumentBuilder<FabricClientCommandSource> COMMANDS =
         ROOT_COMMAND
             .then(BiomeWikiCommands.BIOME_COMMANDS)
             .then(BlockWikiCommands.BLOCK_COMMANDS)
@@ -27,12 +29,12 @@ public final class WikiCommands {
             .then(MobWikiCommands.MOB_COMMANDS)
             .then(SmithWikiCommands.SMITH_COMMANDS)
             .then(StructureWikiCommands.STRUCTURE_COMMANDS)
-            .then(TradeWikiCommands.TRADE_COMMANDS);
+            .then(TradeWikiCommands.TRADE_COMMANDS)
+            .then(SettingsCommand.SETTINGS_COMMANDS);
 
     public static void registerMCWikiCommands(
-        CommandDispatcher<CommandSourceStack> dispatcher,
-        CommandBuildContext context,
-        Commands.CommandSelection selection
+        CommandDispatcher<FabricClientCommandSource> dispatcher,
+        CommandBuildContext context
     ) {
         dispatcher.register(COMMANDS);
     }

@@ -18,6 +18,9 @@
 		"main": [
           "io.github.piscescup.mcwiki.MinecraftWiki"
 		],
+		"client": [
+          "io.github.piscescup.mcwiki.MinecraftWikiClient"
+		],
 		"fabric-datagen": [
           "io.github.piscescup.mcwiki.MinecraftWikiDataGenerator"
 		]

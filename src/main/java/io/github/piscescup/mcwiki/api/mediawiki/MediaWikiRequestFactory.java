@@ -1,6 +1,7 @@
 package io.github.piscescup.mcwiki.api.mediawiki;
 
 import io.github.piscescup.mcwiki.wiki.model.WikiRequest;
+import io.github.piscescup.mcwiki.wiki.model.WikiSearchModeConfig;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
@@ -77,6 +78,62 @@ public final class MediaWikiRequestFactory {
             .header("Accept", "application/json")
             .header("User-Agent", this.userAgent)
             .timeout(request.timeout())
+            .GET()
+            .build();
+    }
+
+    /**
+     * Creates an HTTP request for a page's complete plain-text content.
+     *
+     * @param pageId  the MediaWiki page identifier
+     * @param timeout the request timeout
+     * @return the HTTP request
+     */
+    @NotNull
+    public HttpRequest createPageSummaryRequest(
+        long pageId,
+        @NotNull java.time.Duration timeout
+    ) {
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("action", "query");
+        parameters.put("prop", "extracts|info");
+        parameters.put("pageids", Long.toString(pageId));
+        parameters.put("explaintext", "1");
+        parameters.put("inprop", "url");
+        parameters.put("format", "json");
+        parameters.put("formatversion", "2");
+
+        return HttpRequest.newBuilder(createRequestUri(parameters))
+            .header("Accept", "application/json")
+            .header("User-Agent", this.userAgent)
+            .timeout(timeout)
+            .GET()
+            .build();
+    }
+
+    /**
+     * Creates an HTTP request for parsed HTML used by GUI table formatting.
+     *
+     * @param pageId  the MediaWiki page identifier
+     * @param timeout the request timeout
+     * @return the HTTP request
+     */
+    @NotNull
+    public HttpRequest createPageHtmlRequest(
+        long pageId,
+        @NotNull java.time.Duration timeout
+    ) {
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("action", "parse");
+        parameters.put("pageid", Long.toString(pageId));
+        parameters.put("prop", "text");
+        parameters.put("format", "json");
+        parameters.put("formatversion", "2");
+
+        return HttpRequest.newBuilder(createRequestUri(parameters))
+            .header("Accept", "application/json")
+            .header("User-Agent", this.userAgent)
+            .timeout(timeout)
             .GET()
             .build();
     }

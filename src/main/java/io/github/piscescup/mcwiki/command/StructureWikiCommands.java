@@ -2,8 +2,7 @@ package io.github.piscescup.mcwiki.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.piscescup.mcwiki.wiki.WikiCategory;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 
 /**
  *
@@ -11,5 +10,6 @@ import net.minecraft.commands.Commands;
  * @since 1.0.0
  */
 public class StructureWikiCommands {
-    public static final LiteralArgumentBuilder<CommandSourceStack> STRUCTURE_COMMANDS = Commands.literal(WikiCategory.STRUCTURE.id());
+    public static final LiteralArgumentBuilder<FabricClientCommandSource> STRUCTURE_COMMANDS =
+        WikiCategoryCommand.create(WikiCategory.STRUCTURE);
 }

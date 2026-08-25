@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.github.piscescup.mcwiki.exception.WikiRequestException;
 import io.github.piscescup.mcwiki.wiki.model.WikiRequest;
+import io.github.piscescup.mcwiki.wiki.model.WikiPageSummary;
 import io.github.piscescup.mcwiki.wiki.model.WikiSearchResult;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +21,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * A client for accessing the Minecraft Wiki through the MediaWiki API.
+ * A client for accessing complete Minecraft Wiki page text through the
+ * MediaWiki API.
  *
  * <p>All requests are executed asynchronously and do not block the
  * Minecraft client thread.</p>
@@ -65,6 +67,42 @@ public final class MediaWikiClient {
             )
             .thenApply(this::requireSuccessfulResponse)
             .thenApply(this::parseSearchResults);
+    }
+
+    @NotNull
+    public CompletableFuture<WikiPageSummary> fetchPageSummary(
+        long pageId,
+        @NotNull Duration timeout
+    ) {
+        HttpRequest summaryRequest =
+            this.requestFactory.createPageSummaryRequest(pageId, timeout);
+        HttpRequest htmlRequest =
+            this.requestFactory.createPageHtmlRequest(pageId, timeout);
+
+        CompletableFuture<WikiPageSummary> summaryFuture = this.httpClient.sendAsync(
+                summaryRequest,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+            )
+            .thenApply(this::requireSuccessfulResponse)
+            .thenApply(this::parsePageSummary);
+
+        CompletableFuture<String> htmlFuture = this.httpClient.sendAsync(
+                htmlRequest,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+            )
+            .thenApply(this::requireSuccessfulResponse)
+            .thenApply(this::parsePageHtml);
+
+        return summaryFuture.thenCombine(
+            htmlFuture,
+            (summary, html) -> new WikiPageSummary(
+                summary.pageId(),
+                summary.title(),
+                summary.extract(),
+                summary.pageUrl(),
+                html
+            )
+        );
     }
 
     @NotNull
@@ -143,6 +181,63 @@ public final class MediaWikiClient {
         } catch (RuntimeException exception) {
             throw new WikiRequestException(
                 "Failed to parse the MediaWiki search response.",
+                exception
+            );
+        }
+    }
+
+    @NotNull
+    private WikiPageSummary parsePageSummary(@NotNull String responseBody) {
+        try {
+            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+            if (root.has("error")) {
+                throw new WikiRequestException(
+                    root.getAsJsonObject("error").get("info").getAsString()
+                );
+            }
+
+            JsonArray pages = root.getAsJsonObject("query").getAsJsonArray("pages");
+            if (pages == null || pages.isEmpty()) {
+                throw new WikiRequestException("The requested Wiki page was not found.");
+            }
+
+            JsonObject page = pages.get(0).getAsJsonObject();
+            return new WikiPageSummary(
+                page.get("pageid").getAsLong(),
+                page.get("title").getAsString(),
+                page.has("extract") ? page.get("extract").getAsString() : "",
+                page.has("fullurl") ? page.get("fullurl").getAsString() : "",
+                ""
+            );
+        } catch (WikiRequestException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            throw new WikiRequestException(
+                "Failed to parse the MediaWiki page response.",
+                exception
+            );
+        }
+    }
+
+    @NotNull
+    private String parsePageHtml(@NotNull String responseBody) {
+        try {
+            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+            if (root.has("error")) {
+                throw new WikiRequestException(
+                    root.getAsJsonObject("error").get("info").getAsString()
+                );
+            }
+
+            JsonObject parse = root.getAsJsonObject("parse");
+            return parse != null && parse.has("text")
+                ? parse.get("text").getAsString()
+                : "";
+        } catch (WikiRequestException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            throw new WikiRequestException(
+                "Failed to parse the MediaWiki HTML response.",
                 exception
             );
         }
