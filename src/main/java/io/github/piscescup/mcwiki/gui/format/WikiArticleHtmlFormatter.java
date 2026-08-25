@@ -1,13 +1,15 @@
-package io.github.piscescup.mcwiki.format;
+package io.github.piscescup.mcwiki.gui.format;
 
-import io.github.piscescup.mcwiki.WikiTexts;
+import io.github.piscescup.mcwiki.gui.WikiTexts;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,40 +30,63 @@ public final class WikiArticleHtmlFormatter {
     private WikiArticleHtmlFormatter() {
     }
 
-    public static Component format(
+    public static WikiArticleDocument document(
         String fallbackText,
         String html,
         String pageUrl,
         String language
     ) {
         if (html.isBlank()) {
-            return fallback(fallbackText, pageUrl, language);
+            return fallbackDocument(fallbackText, pageUrl, language);
         }
 
         try {
-            MutableComponent result = Component.empty();
-            result.append(Component.literal(
-                WikiTexts.text(language, "abstract")
-            ).withStyle(ChatFormatting.BOLD, ChatFormatting.DARK_AQUA));
-            result.append("\n");
+            List<WikiArticleDocument.Block> blocks = new ArrayList<>();
+            blocks.add(new WikiArticleDocument.Block(
+                Component.literal(WikiTexts.text(language, "abstract"))
+                    .withStyle(ChatFormatting.BOLD, ChatFormatting.DARK_AQUA),
+                0,
+                0,
+                6
+            ));
 
             int[] sectionNumbers = new int[5];
             for (Element child : Jsoup.parse(html).body().children()) {
-                appendElement(result, child, sectionNumbers, 0);
+                appendElement(blocks, child, sectionNumbers, 0);
             }
 
-            appendReference(result, pageUrl, language);
-            if (result.getString().length() < 20) {
-                return fallback(fallbackText, pageUrl, language);
+            appendReference(blocks, pageUrl, language);
+            if (blocks.stream().mapToInt(
+                block -> block.text().getString().length()
+            ).sum() < 20) {
+                return fallbackDocument(fallbackText, pageUrl, language);
             }
-            return result;
+
+            return new WikiArticleDocument(blocks, narration(blocks));
         } catch (RuntimeException exception) {
-            return fallback(fallbackText, pageUrl, language);
+            return fallbackDocument(fallbackText, pageUrl, language);
         }
     }
 
+    public static Component format(
+        String fallbackText,
+        String html,
+        String pageUrl,
+        String language
+    ) {
+        MutableComponent result = Component.empty();
+        for (WikiArticleDocument.Block block
+            : document(fallbackText, html, pageUrl, language).blocks()) {
+            if (!result.getString().isEmpty()) {
+                result.append("\n");
+            }
+            result.append(block.text());
+        }
+        return result;
+    }
+
     private static void appendElement(
-        MutableComponent result,
+        List<WikiArticleDocument.Block> blocks,
         Element element,
         int[] sectionNumbers,
         int listDepth
@@ -79,67 +104,73 @@ public final class WikiArticleHtmlFormatter {
         }
 
         if (isHeading(tag)) {
-            appendHeading(result, element, sectionNumbers);
+            appendHeading(blocks, element, sectionNumbers);
             return;
         }
         if (tag.equals("p")) {
-            appendParagraph(result, element.text());
+            appendParagraph(blocks, Component.literal(element.text()), 0, 0, 8);
             return;
         }
         if (tag.equals("ul") || tag.equals("ol")) {
-            appendList(result, element, listDepth);
+            appendList(blocks, element, listDepth);
             return;
         }
         if (tag.equals("dl")) {
-            appendDefinitionList(result, element);
+            appendDefinitionList(blocks, element);
             return;
         }
 
         for (Element child : element.children()) {
-            appendElement(result, child, sectionNumbers, listDepth);
+            appendElement(blocks, child, sectionNumbers, listDepth);
         }
     }
 
     private static void appendHeading(
-        MutableComponent result,
+        List<WikiArticleDocument.Block> blocks,
         Element heading,
         int[] sectionNumbers
     ) {
         int depth = Integer.parseInt(heading.tagName().substring(1)) - 2;
         depth = Math.clamp(depth, 0, sectionNumbers.length - 1);
         sectionNumbers[depth]++;
-        Arrays.fill(
-            sectionNumbers,
-            depth + 1,
-            sectionNumbers.length,
-            0
-        );
+        Arrays.fill(sectionNumbers, depth + 1, sectionNumbers.length, 0);
 
-        String headingText = heading.text().strip();
+        String headingText = normalize(heading.text());
         if (headingText.isEmpty()) {
             return;
         }
 
-        result.append("\n");
-        result.append(Component.literal(
-            sectionNumber(sectionNumbers, depth) + " " + headingText
-        ).withStyle(headingStyle(depth)));
-        result.append("\n");
+        blocks.add(new WikiArticleDocument.Block(
+            Component.literal(sectionNumber(sectionNumbers, depth) + " " + headingText)
+                .withStyle(headingStyle(depth)),
+            0,
+            10,
+            4
+        ));
     }
 
     private static void appendParagraph(
-        MutableComponent result,
-        String paragraph
+        List<WikiArticleDocument.Block> blocks,
+        Component paragraph,
+        int indent,
+        int topMargin,
+        int bottomMargin
     ) {
-        String normalized = normalize(paragraph);
-        if (!normalized.isEmpty()) {
-            result.append(Component.literal(normalized));
-            result.append("\n\n");
+        String normalized = normalize(paragraph.getString());
+        if (normalized.isEmpty()) {
+            return;
         }
+
+        blocks.add(new WikiArticleDocument.Block(
+            Component.literal(normalized).withStyle(paragraph.getStyle()),
+            indent,
+            topMargin,
+            bottomMargin
+        ));
     }
 
     private static void appendList(
-        MutableComponent result,
+        List<WikiArticleDocument.Block> blocks,
         Element list,
         int depth
     ) {
@@ -152,25 +183,21 @@ public final class WikiArticleHtmlFormatter {
             }
 
             itemNumber++;
-            String marker = ordered ? itemNumber + ". " : "• ";
-            result.append(Component.literal(
-                "  ".repeat(depth) + marker
-            ).withStyle(ordered
-                ? ChatFormatting.GOLD
-                : ChatFormatting.AQUA));
-
-            String itemText = listItemText(item);
-            result.append(Component.literal(itemText));
-            result.append("\n");
+            String marker = ordered ? itemNumber + ". " : "- ";
+            MutableComponent line = Component.literal(marker)
+                .withStyle(ordered
+                    ? ChatFormatting.GOLD
+                    : ChatFormatting.AQUA)
+                .append(Component.literal(listItemText(item)));
+            appendParagraph(blocks, line, depth * 14, 0, 3);
 
             for (Element child : item.children()) {
                 if (child.tagName().equals("ul")
                     || child.tagName().equals("ol")) {
-                    appendList(result, child, depth + 1);
+                    appendList(blocks, child, depth + 1);
                 }
             }
         }
-        result.append("\n");
     }
 
     private static String listItemText(Element item) {
@@ -185,7 +212,7 @@ public final class WikiArticleHtmlFormatter {
     }
 
     private static void appendDefinitionList(
-        MutableComponent result,
+        List<WikiArticleDocument.Block> blocks,
         Element list
     ) {
         for (Element item : list.children()) {
@@ -195,14 +222,46 @@ public final class WikiArticleHtmlFormatter {
             }
 
             if (item.tagName().equals("dt")) {
-                result.append(Component.literal(text)
-                    .withStyle(ChatFormatting.BOLD, ChatFormatting.AQUA));
+                blocks.add(new WikiArticleDocument.Block(
+                    Component.literal(text)
+                        .withStyle(ChatFormatting.BOLD, ChatFormatting.AQUA),
+                    0,
+                    2,
+                    2
+                ));
             } else if (item.tagName().equals("dd")) {
-                result.append(Component.literal("  " + text));
+                blocks.add(new WikiArticleDocument.Block(
+                    Component.literal(text),
+                    12,
+                    0,
+                    4
+                ));
             }
-            result.append("\n");
         }
-        result.append("\n");
+    }
+
+    private static void appendReference(
+        List<WikiArticleDocument.Block> blocks,
+        String pageUrl,
+        String language
+    ) {
+        if (pageUrl.isBlank()) {
+            return;
+        }
+
+        blocks.add(new WikiArticleDocument.Block(
+            Component.literal(WikiTexts.text(language, "reference"))
+                .withStyle(ChatFormatting.BOLD, ChatFormatting.DARK_AQUA),
+            0,
+            12,
+            2
+        ));
+        blocks.add(new WikiArticleDocument.Block(
+            Component.literal(pageUrl).withStyle(ChatFormatting.GRAY),
+            0,
+            0,
+            0
+        ));
     }
 
     private static boolean shouldSkip(Element element) {
@@ -249,30 +308,53 @@ public final class WikiArticleHtmlFormatter {
         };
     }
 
-    private static void appendReference(
-        MutableComponent result,
-        String pageUrl,
-        String language
-    ) {
-        if (pageUrl.isBlank()) {
-            return;
-        }
-        result.append(Component.literal(
-            WikiTexts.text(language, "reference") + "\n"
-        ).withStyle(ChatFormatting.BOLD, ChatFormatting.DARK_AQUA));
-        result.append(Component.literal(pageUrl)
-            .withStyle(ChatFormatting.GRAY));
-    }
-
     private static String normalize(String value) {
         return value.replaceAll("\\s+", " ").strip();
     }
 
-    private static Component fallback(
+    private static WikiArticleDocument fallbackDocument(
         String text,
         String pageUrl,
         String language
     ) {
-        return WikiTextFormatter.format(text, "", pageUrl, language);
+        List<WikiArticleDocument.Block> blocks = new ArrayList<>();
+        blocks.add(new WikiArticleDocument.Block(
+            Component.literal(WikiTexts.text(language, "abstract"))
+                .withStyle(ChatFormatting.BOLD, ChatFormatting.DARK_AQUA),
+            0,
+            0,
+            6
+        ));
+
+        boolean previousBlank = false;
+        for (String rawLine : text.split("\\R", -1)) {
+            String line = normalize(rawLine);
+            if (line.isEmpty()) {
+                previousBlank = true;
+                continue;
+            }
+
+            blocks.add(new WikiArticleDocument.Block(
+                Component.literal(line),
+                0,
+                previousBlank ? 6 : 0,
+                2
+            ));
+            previousBlank = false;
+        }
+
+        appendReference(blocks, pageUrl, language);
+        return new WikiArticleDocument(blocks, narration(blocks));
+    }
+
+    private static Component narration(List<WikiArticleDocument.Block> blocks) {
+        StringBuilder narration = new StringBuilder();
+        for (WikiArticleDocument.Block block : blocks) {
+            if (!narration.isEmpty()) {
+                narration.append('\n');
+            }
+            narration.append(block.text().getString());
+        }
+        return Component.literal(narration.toString());
     }
 }

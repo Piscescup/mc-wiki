@@ -1,4 +1,4 @@
-package io.github.piscescup.mcwiki;
+package io.github.piscescup.mcwiki.gui;
 
 import io.github.piscescup.mcwiki.wiki.WikiCategory;
 
@@ -13,16 +13,16 @@ public final class WikiTexts {
         boolean chinese = language.equals("zh_cn");
         return switch (key) {
             case "loading" -> chinese ? "正在查询 Minecraft Wiki..." : "Searching Minecraft Wiki...";
-            case "no_results" -> chinese ? "没有找到相关页面。" : "No matching page was found.";
+            case "no_results" -> chinese ? "没有找到匹配的页面。" : "No matching page was found.";
             case "error" -> chinese ? "查询失败" : "Search failed";
             case "close" -> chinese ? "关闭" : "Close";
-            case "language_set" -> chinese ? "界面语言已设置为简体中文。" : "GUI language set to English.";
+            case "language_set" -> chinese ? "界面语言已切换为简体中文。" : "GUI language set to English.";
             case "source" -> chinese ? "来源" : "Source";
-            case "abstract" -> chinese ? "摘要" : "Abstract";
+            case "abstract" -> chinese ? "正文摘要" : "Article";
             case "reference" -> chinese ? "参考链接" : "Reference";
             case "open_source" -> chinese ? "打开原文" : "Open article";
-            case "tables" -> chinese ? "附表" : "Tables";
-            case "table" -> chinese ? "表" : "Table";
+            case "tables" -> chinese ? "表格" : "Tables";
+            case "table" -> chinese ? "表格" : "Table";
             case "untitled_table" -> chinese ? "未命名表格" : "Untitled table";
             case "article" -> chinese ? "正文" : "Article";
             case "previous_table" -> chinese ? "上一张" : "Previous";
@@ -31,7 +31,9 @@ public final class WikiTexts {
             case "field" -> chinese ? "字段" : "Field";
             case "recipe" -> chinese ? "合成配方" : "Crafting recipe";
             case "output" -> chinese ? "产物" : "Output";
-            case "and_more" -> chinese ? "等可替换材料" : "and alternatives";
+            case "and_more" -> chinese ? "以及更多可替代材料" : "and alternatives";
+            case "image_loading" -> chinese ? "图片加载中..." : "Loading image...";
+            case "image_unavailable" -> chinese ? "图片暂时无法显示" : "Image unavailable";
             default -> key;
         };
     }

@@ -96,10 +96,12 @@ public final class MediaWikiRequestFactory {
     ) {
         Map<String, String> parameters = new LinkedHashMap<>();
         parameters.put("action", "query");
-        parameters.put("prop", "extracts|info");
+        parameters.put("prop", "extracts|info|pageimages");
         parameters.put("pageids", Long.toString(pageId));
         parameters.put("explaintext", "1");
         parameters.put("inprop", "url");
+        parameters.put("piprop", "thumbnail|original");
+        parameters.put("pithumbsize", "640");
         parameters.put("format", "json");
         parameters.put("formatversion", "2");
 

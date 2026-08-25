@@ -1,7 +1,9 @@
-package io.github.piscescup.mcwiki;
+package io.github.piscescup.mcwiki.gui;
 
-import io.github.piscescup.mcwiki.format.WikiTable;
-import io.github.piscescup.mcwiki.format.WikiTableCardFormatter;
+import io.github.piscescup.mcwiki.gui.format.WikiArticleDocument;
+import io.github.piscescup.mcwiki.gui.format.WikiTable;
+import io.github.piscescup.mcwiki.gui.widget.WikiArticleWidget;
+import io.github.piscescup.mcwiki.gui.widget.WikiTableWidget;
 import io.github.piscescup.mcwiki.wiki.WikiCategory;
 import io.github.piscescup.mcwiki.wiki.model.WikiPageSummary;
 import net.minecraft.ChatFormatting;
@@ -24,12 +26,16 @@ public final class WikiResultScreen extends Screen {
 
     private Component pageTitle;
     private Component body;
-    private Component articleBody;
+    private WikiArticleDocument articleDocument;
     private String pageUrl = "";
+    private String requestedImageUrl = "";
     private List<WikiTable> tables = List.of();
+    private WikiImageLoader.LoadedImage articleImage;
     private int tableIndex;
     private boolean showingTables;
     private boolean loaded;
+    private boolean imageLoadFailed;
+    private boolean disposed;
 
     public WikiResultScreen(
         WikiCategory category,
@@ -41,30 +47,42 @@ public final class WikiResultScreen extends Screen {
         this.query = query;
         this.language = language;
         this.pageTitle = Component.literal(
-            WikiTexts.category(language, category) + " · " + query
+            WikiTexts.category(language, category) + " - " + query
         );
         this.body = Component.literal(WikiTexts.text(language, "loading"));
-        this.articleBody = this.body;
+        this.articleDocument = null;
     }
 
     public void showSummary(
         WikiPageSummary summary,
-        Component article,
+        WikiArticleDocument article,
         List<WikiTable> tables
     ) {
         this.pageTitle = Component.literal(summary.title())
             .withStyle(ChatFormatting.BOLD, ChatFormatting.GOLD);
         this.pageUrl = summary.pageUrl();
         this.tables = List.copyOf(tables);
-        this.articleBody = article;
-        this.body = this.articleBody;
+        this.articleDocument = article;
+        this.body = Component.literal(summary.extract());
         this.loaded = true;
-        rebuildWidgets();
+        this.showingTables = false;
+        this.tableIndex = 0;
+        startImageLoad(summary.imageUrl());
+        if (this.minecraft != null) {
+            rebuildWidgets();
+        }
     }
 
     public void showError(String message) {
+        clearArticleImage();
         this.pageTitle = Component.literal(WikiTexts.text(this.language, "error"));
         this.body = Component.literal(message == null ? "Unknown error" : message);
+        this.pageUrl = "";
+        this.requestedImageUrl = "";
+        this.tables = List.of();
+        this.articleDocument = null;
+        this.loaded = false;
+        this.showingTables = false;
         rebuildWidgets();
     }
 
@@ -84,15 +102,49 @@ public final class WikiResultScreen extends Screen {
         }
 
         int bodyHeight = Math.max(80, this.height - bodyTop - 50);
-        addRenderableWidget(new FittingMultiLineTextWidget(
-            left, bodyTop, contentWidth, bodyHeight, this.body, this.font
-        ));
+        if (!this.loaded || this.articleDocument == null) {
+            addRenderableWidget(new FittingMultiLineTextWidget(
+                left, bodyTop, contentWidth, bodyHeight, this.body, this.font
+            ));
+        } else if (this.showingTables && !this.tables.isEmpty()) {
+            addRenderableWidget(new WikiTableWidget(
+                left,
+                bodyTop,
+                contentWidth,
+                bodyHeight,
+                this.font,
+                this.tables.get(this.tableIndex),
+                this.tableIndex,
+                this.tables.size(),
+                this.language
+            ));
+        } else {
+            addRenderableWidget(new WikiArticleWidget(
+                left,
+                bodyTop,
+                contentWidth,
+                bodyHeight,
+                this.font,
+                this.articleDocument,
+                this.language,
+                this.requestedImageUrl,
+                this.articleImage,
+                this.imageLoadFailed
+            ));
+        }
 
         if (this.showingTables) {
             addTableNavigation();
         } else {
             addArticleActions();
         }
+    }
+
+    @Override
+    public void removed() {
+        this.disposed = true;
+        clearArticleImage();
+        super.removed();
     }
 
     private void addViewTabs() {
@@ -153,7 +205,6 @@ public final class WikiResultScreen extends Screen {
 
     private void showArticle() {
         this.showingTables = false;
-        this.body = this.articleBody;
         rebuildWidgets();
     }
 
@@ -163,12 +214,43 @@ public final class WikiResultScreen extends Screen {
         }
         this.showingTables = true;
         this.tableIndex = Math.clamp(index, 0, this.tables.size() - 1);
-        this.body = WikiTableCardFormatter.format(
-            this.tables.get(this.tableIndex),
-            this.tableIndex,
-            this.tables.size(),
-            this.language
-        );
         rebuildWidgets();
+    }
+
+    private void startImageLoad(String imageUrl) {
+        clearArticleImage();
+        this.requestedImageUrl = imageUrl == null ? "" : imageUrl;
+        this.imageLoadFailed = false;
+
+        if (this.requestedImageUrl.isBlank() || this.minecraft == null) {
+            return;
+        }
+
+        String currentRequest = this.requestedImageUrl;
+        WikiImageLoader.load(this.minecraft, currentRequest)
+            .whenComplete((image, throwable) -> this.minecraft.execute(() -> {
+                if (throwable != null) {
+                    if (!this.disposed && currentRequest.equals(this.requestedImageUrl)) {
+                        this.imageLoadFailed = true;
+                        rebuildWidgets();
+                    }
+                    return;
+                }
+
+                if (this.disposed || !currentRequest.equals(this.requestedImageUrl)) {
+                    image.release(this.minecraft);
+                    return;
+                }
+
+                this.articleImage = image;
+                rebuildWidgets();
+            }));
+    }
+
+    private void clearArticleImage() {
+        if (this.articleImage != null && this.minecraft != null) {
+            this.articleImage.release(this.minecraft);
+        }
+        this.articleImage = null;
     }
 }

@@ -1,6 +1,6 @@
-package io.github.piscescup.mcwiki.format;
+package io.github.piscescup.mcwiki.gui.format;
 
-import io.github.piscescup.mcwiki.WikiTexts;
+import io.github.piscescup.mcwiki.gui.WikiTexts;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Formats article text and HTML tables for the Wiki result GUI.
+ * Legacy plain-text formatter retained as a fallback path.
  */
 public final class WikiTextFormatter {
     private static final Pattern HEADING =
@@ -118,10 +118,8 @@ public final class WikiTextFormatter {
             ).withStyle(ChatFormatting.BOLD, ChatFormatting.DARK_AQUA));
             result.append("\n");
 
-            String rule = "━".repeat(tableRuleWidth(table));
-            String middleRule = "─".repeat(tableRuleWidth(table));
-            result.append(Component.literal(rule)
-                .withStyle(ChatFormatting.GRAY));
+            String rule = "-".repeat(tableRuleWidth(table));
+            result.append(Component.literal(rule).withStyle(ChatFormatting.GRAY));
             result.append("\n");
 
             int lastHeaderRow = lastHeaderRow(table);
@@ -131,23 +129,18 @@ public final class WikiTextFormatter {
                     String.join("    ", row.cells())
                 );
                 if (row.header()) {
-                    rowText.withStyle(
-                        ChatFormatting.BOLD,
-                        ChatFormatting.YELLOW
-                    );
+                    rowText.withStyle(ChatFormatting.BOLD, ChatFormatting.YELLOW);
                 }
                 result.append(rowText);
                 result.append("\n");
 
                 if (rowIndex == lastHeaderRow) {
-                    result.append(Component.literal(middleRule)
-                        .withStyle(ChatFormatting.GRAY));
+                    result.append(Component.literal(rule).withStyle(ChatFormatting.GRAY));
                     result.append("\n");
                 }
             }
 
-            result.append(Component.literal(rule)
-                .withStyle(ChatFormatting.GRAY));
+            result.append(Component.literal(rule).withStyle(ChatFormatting.GRAY));
             result.append("\n");
         }
     }
@@ -165,8 +158,10 @@ public final class WikiTextFormatter {
 
     private static int tableRuleWidth(WikiTable table) {
         int longestRow = table.rows().stream()
-            .mapToInt(row -> String.join("    ", row.cells())
-                .codePointCount(0, String.join("    ", row.cells()).length()))
+            .mapToInt(row -> {
+                String rowText = String.join("    ", row.cells());
+                return rowText.codePointCount(0, rowText.length());
+            })
             .max()
             .orElse(24);
         return Math.clamp(longestRow, 24, 56);

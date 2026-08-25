@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
  * @param extract the complete plain-text page content
  * @param pageUrl the URL of the original Wiki page
  * @param html the parsed page HTML used to recover table structure
+ * @param imageUrl the lead image URL returned by MediaWiki, if available
  *
  * @author Ren YuanTong
  * @since 1.0.0
@@ -19,6 +20,7 @@ public record WikiPageSummary(
     @NotNull String title,
     @NotNull String extract,
     @NotNull String pageUrl,
-    @NotNull String html
+    @NotNull String html,
+    @NotNull String imageUrl
 ) {
 }

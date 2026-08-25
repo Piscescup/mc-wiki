@@ -1,12 +1,13 @@
 package io.github.piscescup.mcwiki.command;
 
 import io.github.piscescup.mcwiki.api.mediawiki.MediaWikiClient;
-import io.github.piscescup.mcwiki.WikiResultScreen;
-import io.github.piscescup.mcwiki.format.WikiHtmlTableParser;
-import io.github.piscescup.mcwiki.format.WikiArticleHtmlFormatter;
-import io.github.piscescup.mcwiki.format.WikiTable;
-import io.github.piscescup.mcwiki.WikiTexts;
+import io.github.piscescup.mcwiki.gui.WikiResultScreen;
+import io.github.piscescup.mcwiki.gui.format.WikiArticleDocument;
+import io.github.piscescup.mcwiki.gui.format.WikiHtmlTableParser;
+import io.github.piscescup.mcwiki.gui.format.WikiArticleHtmlFormatter;
+import io.github.piscescup.mcwiki.gui.WikiTexts;
 import io.github.piscescup.mcwiki.config.MCWikiSettings;
+import io.github.piscescup.mcwiki.gui.format.WikiTable;
 import io.github.piscescup.mcwiki.wiki.WikiCategory;
 import io.github.piscescup.mcwiki.wiki.model.WikiRequest;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -64,14 +65,14 @@ public final class WikiCommandExecutor {
                 List<WikiTable> tables = throwable == null
                     ? WikiHtmlTableParser.parse(summary.html())
                     : List.of();
-                Component article = throwable == null
-                    ? WikiArticleHtmlFormatter.format(
+                WikiArticleDocument article = throwable == null
+                    ? WikiArticleHtmlFormatter.document(
                         summary.extract(),
                         summary.html(),
                         summary.pageUrl(),
                         SETTINGS.language()
                     )
-                    : Component.empty();
+                    : null;
                 source.getClient().execute(() -> {
                     if (throwable == null) {
                         screen.showSummary(summary, article, tables);

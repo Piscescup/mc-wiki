@@ -100,7 +100,8 @@ public final class MediaWikiClient {
                 summary.title(),
                 summary.extract(),
                 summary.pageUrl(),
-                html
+                html,
+                summary.imageUrl()
             )
         );
     }
@@ -207,7 +208,8 @@ public final class MediaWikiClient {
                 page.get("title").getAsString(),
                 page.has("extract") ? page.get("extract").getAsString() : "",
                 page.has("fullurl") ? page.get("fullurl").getAsString() : "",
-                ""
+                "",
+                parseImageUrl(page)
             );
         } catch (WikiRequestException exception) {
             throw exception;
@@ -241,5 +243,24 @@ public final class MediaWikiClient {
                 exception
             );
         }
+    }
+
+    @NotNull
+    private static String parseImageUrl(@NotNull JsonObject page) {
+        JsonObject thumbnail = page.has("thumbnail")
+            ? page.getAsJsonObject("thumbnail")
+            : null;
+        if (thumbnail != null && thumbnail.has("source")) {
+            return thumbnail.get("source").getAsString();
+        }
+
+        JsonObject original = page.has("original")
+            ? page.getAsJsonObject("original")
+            : null;
+        if (original != null && original.has("source")) {
+            return original.get("source").getAsString();
+        }
+
+        return "";
     }
 }
